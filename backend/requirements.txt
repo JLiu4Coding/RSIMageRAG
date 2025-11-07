@@ -1,0 +1,19 @@
+fastapi==0.115.0
+uvicorn[standard]==0.32.0
+python-multipart==0.0.12
+boto3==1.40.66
+langchain-openai==0.3.35
+langchain-community==0.3.31
+langchain==0.3.27
+openai==2.3.0
+faiss-cpu==1.12.0
+pillow==11.1.0
+# Note: rasterio may need to be installed separately on Windows with Python 3.13
+# Try: pip install rasterio or use conda: conda install -c conda-forge rasterio
+rasterio>=1.3.9,<2.0.0
+numpy>=1.26.4,<3.0.0
+pydantic==2.11.7
+pydantic-settings==2.11.0
+python-dotenv==1.0.1
+geopy==2.4.1
+

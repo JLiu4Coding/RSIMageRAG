@@ -1,0 +1,161 @@
+# ============================================
+# Python
+# ============================================
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg
+*.egg-info/
+dist/
+build/
+*.whl
+.pytest_cache/
+.coverage
+htmlcov/
+*.log
+
+# Virtual Environments
+env/
+venv/
+ENV/
+.venv
+env.bak/
+venv.bak/
+
+# ============================================
+# Environment & Secrets
+# ============================================
+.env
+.env.local
+.env.*.local
+*.key
+*.pem
+*.p12
+credentials.json
+secrets.json
+
+# ============================================
+# IDE & Editors
+# ============================================
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+*.sublime-project
+*.sublime-workspace
+.project
+.classpath
+.settings/
+
+# ============================================
+# OS Files
+# ============================================
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+Desktop.ini
+
+# ============================================
+# Backend - Data & Uploads
+# ============================================
+# Uploaded images (sensitive data)
+backend/uploads/
+uploads/
+backend/images_jpeg/
+images_jpeg/
+
+# Vector store (contains embeddings)
+backend/vectorstore/
+vectorstore/
+*.faiss
+*.pkl
+*.index
+
+# Logs
+backend/*.log
+logs/
+*.log
+
+# Temporary files
+*.tmp
+*.temp
+*.bak
+*.cache
+
+# ============================================
+# Frontend
+# ============================================
+frontend/node_modules/
+frontend/build/
+frontend/dist/
+frontend/.env.local
+frontend/.env.development.local
+frontend/.env.test.local
+frontend/.env.production.local
+frontend/npm-debug.log*
+frontend/yarn-debug.log*
+frontend/yarn-error.log*
+frontend/.pnp/
+frontend/.pnp.js
+frontend/coverage/
+
+# ============================================
+# Jupyter Notebooks
+# ============================================
+.ipynb_checkpoints/
+*.ipynb_checkpoints/
+*/.ipynb_checkpoints/*
+
+# ============================================
+# Image Files (if you don't want to commit test images)
+# ============================================
+# Uncomment if you want to ignore all image files
+# *.tif
+# *.tiff
+# *.jpg
+# *.jpeg
+# *.png
+# *.gif
+# *.bmp
+# *.svg
+
+# But keep specific test/demo images if needed
+# !test_images/
+# !demo_images/
+
+# ============================================
+# Database Files
+# ============================================
+*.db
+*.sqlite
+*.sqlite3
+
+# ============================================
+# AWS & Cloud
+# ============================================
+.aws/
+aws-credentials
+*.pem
+
+# ============================================
+# Testing
+# ============================================
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.hypothesis/
+
+# ============================================
+# Documentation builds
+# ============================================
+docs/_build/
+site/
+

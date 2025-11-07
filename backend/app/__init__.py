@@ -1,0 +1,2 @@
+"""ImageRAG backend application."""
+
