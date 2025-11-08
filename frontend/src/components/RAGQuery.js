@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ragQuery } from '../api/client';
+import { ragQuery, getImageSrcUrl } from '../api/client';
 
 function RAGQuery() {
   const [question, setQuestion] = useState('');
@@ -27,12 +27,7 @@ function RAGQuery() {
   };
 
   return (
-    <div className="card">
-      <h2>RAG Query</h2>
-      <p style={{ marginBottom: '20px', color: '#666' }}>
-        Ask questions about the uploaded images. The system will use image captions to answer.
-      </p>
-
+    <div>
       <div style={{ marginBottom: '20px' }}>
         <textarea
           className="textarea"
@@ -44,40 +39,85 @@ function RAGQuery() {
           className="button"
           onClick={handleQuery}
           disabled={querying}
+          style={{ width: '100%' }}
         >
-          {querying ? 'Processing...' : 'Ask Question'}
+          {querying ? '💭 Processing...' : '💬 Ask Question'}
         </button>
       </div>
 
       {error && <div className="error">{error}</div>}
 
       {result && (
-        <div>
-          <h3>Answer</h3>
-          <div className="card" style={{ marginTop: '10px', backgroundColor: '#f8f9fa' }}>
-            <p style={{ whiteSpace: 'pre-wrap' }}>{result.answer}</p>
+        <div style={{ marginTop: '25px' }}>
+          <h3 style={{ marginBottom: '15px', color: '#2d3748' }}>Answer</h3>
+          <div style={{ 
+            padding: '20px', 
+            backgroundColor: 'linear-gradient(135deg, #e0f2fe 0%, #bae6fd 100%)',
+            backgroundColor: '#e0f2fe',
+            borderRadius: '12px',
+            borderLeft: '4px solid #0ea5e9',
+            marginBottom: '20px'
+          }}>
+            <p style={{ whiteSpace: 'pre-wrap', lineHeight: '1.8', color: '#0c4a6e' }}>
+              {result.answer}
+            </p>
           </div>
 
           {result.sources && result.sources.length > 0 && (
-            <div style={{ marginTop: '20px' }}>
-              <h3>Sources ({result.sources.length})</h3>
-              {result.sources.map((source, idx) => (
-                <div key={idx} className="card" style={{ marginBottom: '10px', marginTop: '10px' }}>
-                  <p><strong>Source {idx + 1}</strong></p>
-                  {source.s3_url && (
-                    <p>
-                      <a href={source.s3_url} target="_blank" rel="noopener noreferrer">
-                        View Image
-                      </a>
+            <div style={{ marginTop: '25px' }}>
+              <h3 style={{ marginBottom: '15px', color: '#2d3748' }}>
+                Sources ({result.sources.length})
+              </h3>
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))',
+                gap: '15px'
+              }}>
+                {result.sources.map((source, idx) => (
+                  <div 
+                    key={idx} 
+                    style={{ 
+                      padding: '15px',
+                      backgroundColor: '#f7fafc',
+                      borderRadius: '10px',
+                      border: '1px solid #e2e8f0',
+                      transition: 'all 0.3s ease'
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.backgroundColor = '#edf2f7';
+                      e.currentTarget.style.transform = 'translateY(-2px)';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.backgroundColor = '#f7fafc';
+                      e.currentTarget.style.transform = 'translateY(0)';
+                    }}
+                  >
+                    <p style={{ fontWeight: '600', marginBottom: '10px', color: '#2d3748' }}>
+                      Source {idx + 1}
                     </p>
-                  )}
-                  {source.snippet && (
-                    <p style={{ marginTop: '10px', fontSize: '14px', color: '#666' }}>
-                      {source.snippet}
-                    </p>
-                  )}
-                </div>
-              ))}
+                    {source.s3_url && (
+                      <div style={{ marginBottom: '10px' }}>
+                        <img 
+                          src={getImageSrcUrl(source.s3_url, source.image_id || '')}
+                          alt={`Source ${idx + 1}`}
+                          style={{
+                            width: '100%',
+                            height: '120px',
+                            objectFit: 'contain',
+                            borderRadius: '6px',
+                            backgroundColor: '#edf2f7'
+                          }}
+                        />
+                      </div>
+                    )}
+                    {source.snippet && (
+                      <p style={{ fontSize: '13px', color: '#4a5568', lineHeight: '1.6' }}>
+                        {source.snippet}
+                      </p>
+                    )}
+                  </div>
+                ))}
+              </div>
             </div>
           )}
         </div>

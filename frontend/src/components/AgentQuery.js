@@ -28,12 +28,7 @@ function AgentQuery() {
   };
 
   return (
-    <div className="card">
-      <h2>Agentic Analysis</h2>
-      <p style={{ marginBottom: '20px', color: '#666' }}>
-        Use an AI agent with tools to autonomously analyze images. The agent can search, analyze, and process images automatically.
-      </p>
-
+    <div>
       <div style={{ marginBottom: '20px' }}>
         <input
           type="text"
@@ -52,39 +47,73 @@ function AgentQuery() {
           className="button"
           onClick={handleQuery}
           disabled={processing}
+          style={{ width: '100%' }}
         >
-          {processing ? 'Processing...' : 'Run Agent Query'}
+          {processing ? '🤖 Processing...' : '🤖 Run Agent Query'}
         </button>
       </div>
 
       {error && <div className="error">{error}</div>}
 
       {result && (
-        <div>
-          <h3>Result</h3>
-          <div className="card" style={{ marginTop: '10px', backgroundColor: '#f8f9fa' }}>
-            <p style={{ whiteSpace: 'pre-wrap' }}>{result.result}</p>
+        <div style={{ marginTop: '25px' }}>
+          <h3 style={{ marginBottom: '15px', color: '#2d3748' }}>Result</h3>
+          <div style={{ 
+            padding: '20px', 
+            backgroundColor: '#d1fae5',
+            borderRadius: '12px',
+            borderLeft: '4px solid #10b981',
+            marginBottom: '20px'
+          }}>
+            <p style={{ whiteSpace: 'pre-wrap', lineHeight: '1.8', color: '#065f46' }}>
+              {result.result}
+            </p>
           </div>
 
           {result.steps && result.steps.length > 0 && (
-            <div style={{ marginTop: '20px' }}>
-              <h3>Steps</h3>
-              <ol style={{ marginLeft: '20px' }}>
+            <div style={{ marginTop: '25px' }}>
+              <h3 style={{ marginBottom: '15px', color: '#2d3748' }}>Steps</h3>
+              <ol style={{ 
+                marginLeft: '20px',
+                padding: '15px',
+                backgroundColor: '#f7fafc',
+                borderRadius: '8px',
+                listStylePosition: 'inside'
+              }}>
                 {result.steps.map((step, idx) => (
-                  <li key={idx} style={{ marginBottom: '5px' }}>{step}</li>
+                  <li key={idx} style={{ marginBottom: '8px', color: '#4a5568', lineHeight: '1.6' }}>
+                    {step}
+                  </li>
                 ))}
               </ol>
             </div>
           )}
 
           {result.tools_used && result.tools_used.length > 0 && (
-            <div style={{ marginTop: '20px' }}>
-              <h3>Tools Used</h3>
-              <ul style={{ marginLeft: '20px' }}>
+            <div style={{ marginTop: '25px' }}>
+              <h3 style={{ marginBottom: '15px', color: '#2d3748' }}>Tools Used</h3>
+              <div style={{
+                display: 'flex',
+                flexWrap: 'wrap',
+                gap: '10px'
+              }}>
                 {result.tools_used.map((tool, idx) => (
-                  <li key={idx}>{tool}</li>
+                  <span 
+                    key={idx}
+                    style={{
+                      padding: '8px 16px',
+                      backgroundColor: '#e0f2fe',
+                      color: '#0c4a6e',
+                      borderRadius: '20px',
+                      fontSize: '13px',
+                      fontWeight: '500',
+                      border: '1px solid #bae6fd'
+                    }}
+                  >
+                    🔧 {tool}
+                  </span>
                 ))}
-              </ul>
+              </div>
             </div>
           )}
         </div>

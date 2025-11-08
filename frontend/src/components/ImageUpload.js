@@ -78,8 +78,7 @@ function ImageUpload() {
   };
 
   return (
-    <div className="card">
-      <h2>Upload and Analyze Images</h2>
+    <div>
       
       <div style={{ marginBottom: '20px' }}>
         <div style={{ marginBottom: '10px' }}>
