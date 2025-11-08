@@ -107,8 +107,11 @@ class S3Client:
                 Params={"Bucket": self.bucket_name, "Key": s3_key},
                 ExpiresIn=expires_in
             )
+            print(f"Generated presigned URL for {s3_key}: {url[:50]}...")
             return url
         except (BotoCoreError, ClientError) as e:
-            print(f"URL generation failed: {e}")
+            print(f"URL generation failed for {s3_key}: {e}")
+            import traceback
+            traceback.print_exc()
             return None
 

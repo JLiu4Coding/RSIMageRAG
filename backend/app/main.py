@@ -1,7 +1,8 @@
 """Main FastAPI application."""
 from fastapi import FastAPI, UploadFile, File, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, FileResponse
+from typing import List
 import os
 import uuid
 from pathlib import Path
@@ -9,6 +10,8 @@ from pathlib import Path
 from app.config import settings
 from app.models.schemas import (
     ImageUploadResponse,
+    MultipleImageUploadResponse,
+    ImageUploadItem,
     ImageAnalysisRequest,
     ImageAnalysisResponse,
     QueryRequest,
@@ -56,7 +59,7 @@ async def root():
 @app.post("/api/images/upload", response_model=ImageUploadResponse)
 async def upload_image(file: UploadFile = File(...)):
     """
-    Upload image file to S3.
+    Upload a single image file to S3.
     
     Args:
         file: Image file to upload
@@ -89,6 +92,60 @@ async def upload_image(file: UploadFile = File(...)):
         if 'local_path' in locals() and local_path.exists():
             os.unlink(local_path)
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/api/images/upload-multiple", response_model=MultipleImageUploadResponse)
+async def upload_multiple_images(files: List[UploadFile] = File(..., description="Multiple image files")):
+    """
+    Upload multiple image files to S3.
+    
+    Args:
+        files: List of image files to upload
+        
+    Returns:
+        Multiple image upload response with success and failure lists
+    """
+    uploaded = []
+    failed = []
+    
+    for file in files:
+        local_path = None
+        try:
+            # Save uploaded file to permanent location for analysis
+            image_service.upload_dir.mkdir(exist_ok=True)
+            file_ext = Path(file.filename).suffix
+            temp_filename = f"{uuid.uuid4()}{file_ext}"
+            local_path = image_service.upload_dir / temp_filename
+            
+            # Write file content
+            content = await file.read()
+            with open(local_path, "wb") as f:
+                f.write(content)
+            
+            # Upload to S3
+            image_id, s3_url = image_service.upload_image(str(local_path), file.filename)
+            
+            uploaded.append(ImageUploadItem(
+                image_id=image_id,
+                filename=file.filename,
+                s3_url=s3_url
+            ))
+        except Exception as e:
+            # Clean up on error
+            if local_path and local_path.exists():
+                os.unlink(local_path)
+            failed.append({
+                "filename": file.filename,
+                "error": str(e)
+            })
+    
+    return MultipleImageUploadResponse(
+        uploaded=uploaded,
+        failed=failed,
+        total=len(files),
+        success_count=len(uploaded),
+        failed_count=len(failed)
+    )
 
 
 @app.post("/api/images/analyze", response_model=ImageAnalysisResponse)
@@ -180,6 +237,61 @@ async def get_image_url(image_id: str):
     if not url:
         raise HTTPException(status_code=404, detail="Image not found")
     return {"image_id": image_id, "url": url}
+
+
+@app.get("/api/images/{image_id}/file")
+async def get_image_file(image_id: str):
+    """
+    Serve image file directly from backend (always returns JPEG for display).
+    
+    Args:
+        image_id: Image identifier
+        
+    Returns:
+        Image file (JPEG format for browser compatibility)
+    """
+    if image_id not in image_service._image_metadata:
+        raise HTTPException(status_code=404, detail="Image not found")
+    
+    metadata = image_service._image_metadata[image_id]
+    
+    # Prefer JPEG version if available
+    jpeg_path = metadata.get("jpeg_path")
+    if jpeg_path and os.path.exists(jpeg_path):
+        return FileResponse(
+            jpeg_path,
+            media_type="image/jpeg",
+            filename=f"{Path(metadata.get('filename', 'image')).stem}.jpg"
+        )
+    
+    # Fallback to original file, but convert to JPEG on-the-fly if TIFF
+    local_path = metadata.get("local_path")
+    if not local_path or not os.path.exists(local_path):
+        raise HTTPException(status_code=404, detail="Image file not found")
+    
+    ext = Path(local_path).suffix.lower()
+    if ext in [".tif", ".tiff"]:
+        # Convert TIFF to JPEG on-the-fly
+        try:
+            from app.utils.image_processing import convert_geotiff_to_jpeg
+            jpeg_path = convert_geotiff_to_jpeg(local_path, str(image_service.jpeg_dir))
+            # Update metadata for future requests
+            metadata["jpeg_path"] = jpeg_path
+            return FileResponse(
+                jpeg_path,
+                media_type="image/jpeg",
+                filename=f"{Path(metadata.get('filename', 'image')).stem}.jpg"
+            )
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"Failed to convert TIFF to JPEG: {str(e)}")
+    else:
+        # Already JPEG or other supported format
+        media_type = "image/jpeg" if ext in [".jpg", ".jpeg"] else "image/png"
+        return FileResponse(
+            local_path,
+            media_type=media_type,
+            filename=metadata.get("filename", "image")
+        )
 
 
 if __name__ == "__main__":

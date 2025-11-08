@@ -51,21 +51,48 @@ class ImageService:
         ext = Path(filename).suffix.lower()
         content_type = "image/tiff" if ext in [".tif", ".tiff"] else "image/jpeg"
         
-        # Upload to S3
-        if self.s3_client.upload_file(file_path, s3_key, content_type):
-            s3_url = self.s3_client.generate_presigned_url(s3_key, expires_in=86400)
-            
-            # Store metadata
-            self._image_metadata[image_id] = {
-                "filename": filename,
-                "s3_key": s3_key,
-                "local_path": file_path,
-                "s3_url": s3_url
-            }
-            
-            return image_id, s3_url or ""
+        # Convert to JPEG if TIFF (for frontend display)
+        jpeg_path = None
+        ext = Path(filename).suffix.lower()
+        if ext in [".tif", ".tiff"]:
+            try:
+                jpeg_path = convert_geotiff_to_jpeg(file_path, str(self.jpeg_dir))
+                # Also upload JPEG version to S3
+                jpeg_s3_key = f"images/{image_id}/{Path(filename).stem}.jpg"
+                jpeg_content_type = "image/jpeg"
+                self.s3_client.upload_file(jpeg_path, jpeg_s3_key, jpeg_content_type)
+                # Use JPEG for display URL
+                s3_key_for_url = jpeg_s3_key
+            except Exception as e:
+                print(f"Warning: Failed to convert TIFF to JPEG: {e}")
+                jpeg_path = None
+                s3_key_for_url = s3_key
+        else:
+            s3_key_for_url = s3_key
         
-        raise Exception("Failed to upload image to S3")
+        # Upload original to S3
+        upload_success = self.s3_client.upload_file(file_path, s3_key, content_type)
+        if not upload_success:
+            raise Exception("Failed to upload image to S3")
+        
+        # Generate presigned URL (prefer JPEG if available)
+        s3_url = self.s3_client.generate_presigned_url(s3_key_for_url, expires_in=86400)
+        
+        # Fallback: use backend URL if S3 URL generation fails
+        if not s3_url:
+            print(f"Warning: S3 presigned URL generation failed for {s3_key_for_url}, using backend URL")
+            s3_url = f"/api/images/{image_id}/file"
+        
+        # Store metadata
+        self._image_metadata[image_id] = {
+            "filename": filename,
+            "s3_key": s3_key,
+            "local_path": file_path,
+            "jpeg_path": jpeg_path,  # Store JPEG path for serving
+            "s3_url": s3_url
+        }
+        
+        return image_id, s3_url
     
     def analyze_image(self, image_id: str) -> Dict:
         """
@@ -98,8 +125,12 @@ class ImageService:
             else "Centroid unknown (no CRS)."
         )
         
-        # Convert to JPEG
-        jpeg_path = convert_geotiff_to_jpeg(local_path, str(self.jpeg_dir))
+        # Convert to JPEG if not already converted during upload
+        jpeg_path = metadata.get("jpeg_path")
+        if not jpeg_path or not os.path.exists(jpeg_path):
+            jpeg_path = convert_geotiff_to_jpeg(local_path, str(self.jpeg_dir))
+            metadata["jpeg_path"] = jpeg_path
+        
         # Analyze with LLM
         llm_info = analyze_image_with_llm(self.llm, jpeg_path, location_context)
         

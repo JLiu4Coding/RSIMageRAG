@@ -10,6 +10,22 @@ class ImageUploadResponse(BaseModel):
     message: str
 
 
+class ImageUploadItem(BaseModel):
+    """Single image upload item."""
+    image_id: str
+    filename: str
+    s3_url: str
+
+
+class MultipleImageUploadResponse(BaseModel):
+    """Response for multiple image uploads."""
+    uploaded: List[ImageUploadItem]
+    failed: List[Dict[str, Any]]
+    total: int
+    success_count: int
+    failed_count: int
+
+
 class ImageAnalysisRequest(BaseModel):
     """Request for image analysis."""
     image_id: str

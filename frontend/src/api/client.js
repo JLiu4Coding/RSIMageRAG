@@ -21,6 +21,20 @@ export const uploadImage = async (file) => {
   return response.data;
 };
 
+export const uploadMultipleImages = async (files) => {
+  const formData = new FormData();
+  files.forEach((file) => {
+    formData.append('files', file);
+  });
+  
+  const response = await apiClient.post('/api/images/upload-multiple', formData, {
+    headers: {
+      'Content-Type': 'multipart/form-data',
+    },
+  });
+  return response.data;
+};
+
 export const analyzeImage = async (imageId) => {
   const response = await apiClient.post('/api/images/analyze', {
     image_id: imageId,
@@ -55,5 +69,19 @@ export const agentQuery = async (query, imageId = null) => {
 export const getImageUrl = async (imageId) => {
   const response = await apiClient.get(`/api/images/${imageId}/url`);
   return response.data;
+};
+
+// Helper to get full image URL (for use in img src)
+export const getImageSrcUrl = (s3Url, imageId) => {
+  if (!s3Url) {
+    // Fallback to backend file endpoint
+    return `${API_BASE_URL}/api/images/${imageId}/file`;
+  }
+  // If it's a relative URL (backend fallback), prepend API base
+  if (s3Url.startsWith('/')) {
+    return `${API_BASE_URL}${s3Url}`;
+  }
+  // Otherwise use the S3 URL as-is
+  return s3Url;
 };
 
