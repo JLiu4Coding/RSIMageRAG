@@ -9,6 +9,17 @@ function ImageUpload() {
   const [error, setError] = useState(null);
   const [uploadMode, setUploadMode] = useState('single'); // 'single' or 'multiple'
   const [analysisResults, setAnalysisResults] = useState({}); // Store analysis results per image
+  const [copiedId, setCopiedId] = useState(null); // Track which ID was copied
+
+  const copyToClipboard = async (text, imageId) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopiedId(imageId);
+      setTimeout(() => setCopiedId(null), 2000); // Reset after 2 seconds
+    } catch (err) {
+      console.error('Failed to copy:', err);
+    }
+  };
 
   const handleFileChange = (e) => {
     const selectedFiles = Array.from(e.target.files);
@@ -183,7 +194,50 @@ function ImageUpload() {
               </div>
             </div>
             <div>
-              <p><strong>Image ID:</strong> {result.data.image_id}</p>
+              <div style={{ marginBottom: '15px' }}>
+                <p style={{ marginBottom: '8px' }}>
+                  <strong>Image ID:</strong>
+                </p>
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '10px',
+                  padding: '8px 12px',
+                  backgroundColor: '#f8f9fa',
+                  borderRadius: '6px',
+                  border: '1px solid #e2e8f0'
+                }}>
+                  <code style={{
+                    flex: 1,
+                    fontFamily: 'monospace',
+                    fontSize: '13px',
+                    color: '#2d3748',
+                    wordBreak: 'break-all',
+                    userSelect: 'all',
+                    cursor: 'text'
+                  }}>
+                    {result.data.image_id}
+                  </code>
+                  <button
+                    onClick={() => copyToClipboard(result.data.image_id, result.data.image_id)}
+                    style={{
+                      padding: '6px 12px',
+                      backgroundColor: copiedId === result.data.image_id ? '#10b981' : '#667eea',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '4px',
+                      cursor: 'pointer',
+                      fontSize: '12px',
+                      fontWeight: '500',
+                      transition: 'background-color 0.2s',
+                      whiteSpace: 'nowrap'
+                    }}
+                    title="Copy Image ID"
+                  >
+                    {copiedId === result.data.image_id ? '✓ Copied' : '📋 Copy'}
+                  </button>
+                </div>
+              </div>
               <p><strong>Status:</strong> <span style={{ color: '#155724' }}>✓ Uploaded</span></p>
               <button
                 className="button"
@@ -314,7 +368,7 @@ function ImageUpload() {
                     </div>
                     <p style={{ 
                       fontWeight: 'bold', 
-                      marginBottom: '5px',
+                      marginBottom: '8px',
                       fontSize: '14px',
                       overflow: 'hidden',
                       textOverflow: 'ellipsis',
@@ -322,9 +376,52 @@ function ImageUpload() {
                     }}>
                       {item.filename}
                     </p>
-                    <p style={{ fontSize: '11px', color: '#666', marginBottom: '10px' }}>
-                      ID: {item.image_id.substring(0, 8)}...
-                    </p>
+                    <div style={{ marginBottom: '10px' }}>
+                      <p style={{ fontSize: '11px', color: '#666', marginBottom: '5px' }}>
+                        <strong>ID:</strong>
+                      </p>
+                      <div style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '6px',
+                        padding: '6px 10px',
+                        backgroundColor: '#f8f9fa',
+                        borderRadius: '4px',
+                        border: '1px solid #e2e8f0'
+                      }}>
+                        <code style={{
+                          flex: 1,
+                          fontFamily: 'monospace',
+                          fontSize: '11px',
+                          color: '#2d3748',
+                          wordBreak: 'break-all',
+                          userSelect: 'all',
+                          cursor: 'text',
+                          lineHeight: '1.4'
+                        }}>
+                          {item.image_id}
+                        </code>
+                        <button
+                          onClick={() => copyToClipboard(item.image_id, item.image_id)}
+                          style={{
+                            padding: '4px 8px',
+                            backgroundColor: copiedId === item.image_id ? '#10b981' : '#667eea',
+                            color: 'white',
+                            border: 'none',
+                            borderRadius: '3px',
+                            cursor: 'pointer',
+                            fontSize: '10px',
+                            fontWeight: '500',
+                            transition: 'background-color 0.2s',
+                            whiteSpace: 'nowrap',
+                            flexShrink: 0
+                          }}
+                          title="Copy Image ID"
+                        >
+                          {copiedId === item.image_id ? '✓' : '📋'}
+                        </button>
+                      </div>
+                    </div>
                     <button
                       className="button"
                       onClick={() => handleAnalyze(item.image_id)}
